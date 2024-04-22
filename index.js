@@ -32,10 +32,13 @@ async function run() {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
+    
     })
 
     app.get("/users", async (req, res) => {
+     
       const query = { email: req.query.email }
+      console.log(query)
       const result = await usersCollection.findOne(query);
       res.send(result);
     })
@@ -45,23 +48,21 @@ async function run() {
       console.log(req.query)
       const result = await usersCollection.find(query).toArray();
       res.send(result)
+      console.log(result)
 
     })
 
     app.get("/approved-users",async(req,res)=>{
       const qurey={status:req.query.status}
       const result = await usersCollection.find(qurey).toArray()
-      console.log(result)
       res.send(result)
     })
 
     app.patch("/users/:id", async (req, res) => {
       const filter = {_id: new ObjectId(req.params.id)}
       const updateData = { $set: req.body }
-      console.log(updateData)
       const result = await usersCollection.updateOne(filter, updateData);
       res.send(result)
-      console.log(result)
     
     })
 
