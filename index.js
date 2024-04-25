@@ -64,10 +64,12 @@ async function run() {
     })
 
     app.patch("/users/:id", async (req, res) => {
+
       const filter = { _id: new ObjectId(req.params.id) }
       const updateData = { $set: req.body }
       const result = await usersCollection.updateOne(filter, updateData);
       res.send(result)
+   
 
     })
 
@@ -87,7 +89,6 @@ async function run() {
       }
       const result = await rateCollection.insertOne(rateData)
       res.send(result)
-      console.log(result)
     })
 
 
@@ -97,7 +98,7 @@ async function run() {
         sort: { rateDate: -1 }
       })
       res.send(result)
-      console.log(result)
+
     })
 
 
@@ -112,10 +113,49 @@ async function run() {
         soldAmount: parseFloat(req.body.soldAmount),
         rate: parseFloat(req.body.rate),
         price: parseFloat(req.body.price),
+        status: req.body.status
       };
-      console.log(saleData)
+
       const result = await importsCollection.insertOne(saleData)
       res.send(result)
+    })
+
+    app.get("/imports", async (req, res) => {
+      const numberOfDoc = await importsCollection.estimatedDocumentCount();
+      const query = req.query
+      const importerInfo= await importsCollection.find(query).toArray()
+      const sum = await importsCollection.aggregate([
+        {
+          $match: {
+            status:query.status
+          }
+        },
+
+        {
+          $group: {
+            _id: null,
+            impTotalTk: { $sum: '$price' },
+            impTotalAmount: { $sum: "$soldAmount" },
+
+          }
+        },
+      ]).toArray();
+      const impTotalAmount=sum.length>0?sum[0].impTotalAmount:0
+      const impTotalTk= sum.length>0?sum[0].impTotalTk:0
+      res.send({numberOfDoc,impTotalTk,impTotalAmount,importerInfo})
+    })
+
+    app.patch("/imports/:id",async(req,res)=>{
+    
+      console.log(req)
+      console.log(req.query)
+      console.log(req.params)
+      console.log(req.params.id)
+      const filter = {_id: new ObjectId(req.params.id)}
+      const updateData={$set:req.body};
+      const result = await importsCollection.updateOne(filter,updateData)
+      res.send(result)
+      console.log(result)
     })
 
 
@@ -129,33 +169,14 @@ async function run() {
         buyingAmount: parseFloat(req.body.buyingAmount),
         rate: parseFloat(req.body.rate),
         price: parseFloat(req.body.price),
+
       };
-      console.log(buyingData)
-      const result = await exporstCollection.insertOne(buyingData)
+      const result = await exportsCollection.insertOne(buyingData)
       res.send(result)
-      console.log(result)
     })
 
 
-    app.get("/imports", async (req, res) => {
-      const result = await importsCollection.aggregate([
-        {
-          $group: {
-            _id: null,
-            impTotalTk: {
-              $sum: '$price'
-            },
-            impTotalAmount: {
-              $sum: "$soldAmount"
-            }
-          }
-        }
-      ]).toArray();
-      console.log(result)
-      const impTotalTk = result.length > 0 ? result[0].impTotalTk : 0;
-      const impTotalAmount = result.length > 0 ? result[0].impTotalAmount : 0;
-      res.send({ impTotalAmount, impTotalTk })
-    })
+   
 
 
 
@@ -174,10 +195,9 @@ async function run() {
           }
         }
       ]).toArray();
-      console.log(result)
       const expTotalTk = result.length > 0 ? result[0].expTotalTk : 0;
       const expTotalAmount = result.length > 0 ? result[0].expTotalAmount : 0;
-      res.send({ expTotalAmount, expTotalTk  })
+      res.send({ expTotalAmount, expTotalTk })
     })
 
 
