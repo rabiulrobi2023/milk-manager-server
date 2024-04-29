@@ -31,6 +31,7 @@ async function run() {
     const rateCollection = client.db("MilkManagement").collection("rates")
     const importsCollection = client.db("MilkManagement").collection("imports")
     const exportsCollection = client.db("MilkManagement").collection("exports")
+    const paymentsCollection = client.db("MilkManagement").collection("payments")
 
 
 
@@ -43,7 +44,6 @@ async function run() {
     })
 
     app.get("/users", async (req, res) => {
-
       const query = { email: req.query.email }
       const result = await usersCollection.findOne(query);
       res.send(result);
@@ -54,7 +54,6 @@ async function run() {
       const result = await usersCollection.find(query).toArray();
       res.send(result)
 
-
     })
 
     app.get("/approved-users", async (req, res) => {
@@ -64,13 +63,25 @@ async function run() {
     })
 
     app.patch("/users/:id", async (req, res) => {
-
       const filter = { _id: new ObjectId(req.params.id) }
       const updateData = { $set: req.body }
       const result = await usersCollection.updateOne(filter, updateData);
       res.send(result)
-   
 
+    })
+
+    app.get("/seller", async (req,res)=>{
+      const filter = req.query;
+      const result =  await usersCollection.find(filter).toArray()
+      res.send(result)
+
+    })
+
+    app.get("/admin", async(req,res)=>{
+      const filter = req.query;
+      const result = await usersCollection.findOne(filter)
+      res.send(result)
+  
     })
 
     app.delete("/users/:id", async (req, res) => {
@@ -147,15 +158,10 @@ async function run() {
 
     app.patch("/imports/:id",async(req,res)=>{
     
-      console.log(req)
-      console.log(req.query)
-      console.log(req.params)
-      console.log(req.params.id)
       const filter = {_id: new ObjectId(req.params.id)}
       const updateData={$set:req.body};
       const result = await importsCollection.updateOne(filter,updateData)
       res.send(result)
-      console.log(result)
     })
 
 
@@ -174,11 +180,6 @@ async function run() {
       const result = await exportsCollection.insertOne(buyingData)
       res.send(result)
     })
-
-
-   
-
-
 
 
     app.get("/exports", async (req, res) => {
@@ -201,15 +202,34 @@ async function run() {
     })
 
 
+    app.post("/payments", async(req,res)=>{
+      paymentData =req.body;
+      const result = await paymentsCollection.insertOne(paymentData);
+      res.send(result)
+
+    })
 
 
+    app.get("/payment-request-to-seller", async(req,res)=>{
+      const query = req.query
+      const result = await paymentsCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.get("/payment-request-to-manager", async(req,res)=>{
+      const query = req.query
+      const result = await paymentsCollection.find(query).toArray()
+      res.send(result)
+      console.log(result)
+    })
 
 
-
-
-
-
-
+    app.patch("/payments/:id", async(req,res)=>{
+      const filter= {_id: new ObjectId(req.params.id)}
+      const updateData = {$set:req.body};
+      const result =  await paymentsCollection.updateOne(filter,updateData) 
+      res.send(result)
+      console.log(result)
+    })
 
 
 
