@@ -70,18 +70,18 @@ async function run() {
 
     })
 
-    app.get("/seller", async (req,res)=>{
+    app.get("/seller", async (req, res) => {
       const filter = req.query;
-      const result =  await usersCollection.find(filter).toArray()
+      const result = await usersCollection.find(filter).toArray()
       res.send(result)
 
     })
 
-    app.get("/admin", async(req,res)=>{
+    app.get("/admin", async (req, res) => {
       const filter = req.query;
       const result = await usersCollection.findOne(filter)
       res.send(result)
-  
+
     })
 
     app.delete("/users/:id", async (req, res) => {
@@ -134,11 +134,11 @@ async function run() {
     app.get("/imports", async (req, res) => {
       const numberOfDoc = await importsCollection.estimatedDocumentCount();
       const query = req.query
-      const importerInfo= await importsCollection.find(query).toArray()
+      const importerInfo = await importsCollection.find(query).toArray()
       const sum = await importsCollection.aggregate([
         {
           $match: {
-            status:query.status
+            status: query.status
           }
         },
 
@@ -151,16 +151,16 @@ async function run() {
           }
         },
       ]).toArray();
-      const impTotalAmount=sum.length>0?sum[0].impTotalAmount:0
-      const impTotalTk= sum.length>0?sum[0].impTotalTk:0
-      res.send({numberOfDoc,impTotalTk,impTotalAmount,importerInfo})
+      const impTotalAmount = sum.length > 0 ? sum[0].impTotalAmount : 0
+      const impTotalTk = sum.length > 0 ? sum[0].impTotalTk : 0
+      res.send({ numberOfDoc, impTotalTk, impTotalAmount, importerInfo })
     })
 
-    app.patch("/imports/:id",async(req,res)=>{
-    
-      const filter = {_id: new ObjectId(req.params.id)}
-      const updateData={$set:req.body};
-      const result = await importsCollection.updateOne(filter,updateData)
+    app.patch("/imports/:id", async (req, res) => {
+
+      const filter = { _id: new ObjectId(req.params.id) }
+      const updateData = { $set: req.body };
+      const result = await importsCollection.updateOne(filter, updateData)
       res.send(result)
     })
 
@@ -201,21 +201,40 @@ async function run() {
       res.send({ expTotalAmount, expTotalTk })
     })
 
+    app.get("/exports/:email", async (req, res) => {
+      const qurey = req.params.email
+      console.log(qurey)
+      const currentDate = moment();
+      const currentMonth = currentDate.month() + 1
+      const currentYear = currentDate.year()
 
-    app.post("/payments", async(req,res)=>{
-      paymentData =req.body;
+      const result = await exportsCollection.find({
+        buyerEmail: qurey,
+        buyingDate: {
+          $gte: moment().startOf('month').toDate(),
+          $lt: moment().endOf('month').toDate()
+        }
+
+      }).toArray()
+
+      console.log(result)
+    })
+
+
+    app.post("/payments", async (req, res) => {
+      paymentData = req.body;
       const result = await paymentsCollection.insertOne(paymentData);
       res.send(result)
 
     })
 
 
-    app.get("/payment-request-to-seller", async(req,res)=>{
+    app.get("/payment-request-to-seller", async (req, res) => {
       const query = req.query
       const result = await paymentsCollection.find(query).toArray()
       res.send(result)
     })
-    app.get("/payment-request-to-manager", async(req,res)=>{
+    app.get("/payment-request-to-manager", async (req, res) => {
       const query = req.query
       const result = await paymentsCollection.find(query).toArray()
       res.send(result)
@@ -223,10 +242,10 @@ async function run() {
     })
 
 
-    app.patch("/payments/:id", async(req,res)=>{
-      const filter= {_id: new ObjectId(req.params.id)}
-      const updateData = {$set:req.body};
-      const result =  await paymentsCollection.updateOne(filter,updateData) 
+    app.patch("/payments/:id", async (req, res) => {
+      const filter = { _id: new ObjectId(req.params.id) }
+      const updateData = { $set: req.body };
+      const result = await paymentsCollection.updateOne(filter, updateData)
       res.send(result)
       console.log(result)
     })
